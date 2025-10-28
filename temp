@@ -1,0 +1,47 @@
+import sqlite3
+from datetime import datetime
+
+DB = "focus_flow.db"
+
+def init_db():
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        duration_minutes INTEGER,
+        due_date TEXT,            -- ISO date string or NULL
+        importance INTEGER,       -- 1..10
+        created_at TEXT,
+        completed INTEGER DEFAULT 0
+    )
+    ''')
+    conn.commit()
+    conn.close()
+
+def add_task(title, duration, due_date, importance):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute('INSERT INTO tasks (title, duration_minutes, due_date, importance, created_at) VALUES (?, ?, ?, ?, ?)',
+              (title, duration, due_date, importance, datetime.utcnow().isoformat()))
+    conn.commit()
+    conn.close()
+
+def list_tasks(include_completed=False):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    if include_completed:
+        c.execute('SELECT * FROM tasks')
+    else:
+        c.execute('SELECT * FROM tasks WHERE completed = 0')
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def complete_task(task_id):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute('UPDATE tasks SET completed = 1 WHERE id = ?', (task_id,))
+    conn.commit()
+    conn.close()
