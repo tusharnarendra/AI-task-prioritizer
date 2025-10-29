@@ -59,7 +59,7 @@ def complete_task(task_id):
 
 
 
-#Function to fetch either all tasks of only the completed ones
+#Function to fetch either all tasks or only the completed ones
 def list_tasks(include_completed=False):
     with sqlite3.connect("focusflow.db") as con:
         cur = con.cursor()
