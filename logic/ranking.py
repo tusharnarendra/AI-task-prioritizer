@@ -7,7 +7,7 @@ Normalizes each factor to a 0–1 scale and applies weighted scoring.
 from database.db import list_tasks
 from datetime import datetime, date
 
-def normalize_tasks(importance, estimate, energy, due):
+def rank_tasks(importance, estimate, energy, due):
 
     # Fetch all tasks to determine normalization constants
     rows = list_tasks(include_completed=False)
