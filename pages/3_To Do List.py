@@ -23,12 +23,15 @@ tasks_list = [
 
 # Compute priority scores and attach to each task
 for task in tasks_list:
-    task['priority_score'] = rank_tasks(
+    score, why_this = rank_tasks(
         task['importance'],
         task['est_duration'],
         task['energy_level'],
         task['due_date']
     )
+    task['priority_score'] = score
+    task['why_this'] = why_this
+
 
 # Sort tasks by priority_score in descending order
 tasks_list_sorted = sorted(tasks_list, key=lambda t: t['priority_score'], reverse=True)
@@ -72,3 +75,5 @@ else:
                 with btn_col2:
                     if st.button("❌", key=f"delete_{task_id}"):
                         delete_task(task_id)
+        st.markdown(f"**Score:** {current_task['priority_score']:.2f}")
+        st.markdown(f"💡 *Why this:* {current_task['why_this']}")
