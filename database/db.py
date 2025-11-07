@@ -32,17 +32,20 @@ def init_db():
     
 #Function for adding tasks to the table
 def add_task(title, category, importance, est_duration, due_date, energy_level, completed, score):
-   with sqlite3.connect("focusflow.db") as con:
+    with sqlite3.connect("focusflow.db") as con:
         cur = con.cursor()
         created_at = datetime.utcnow().isoformat()
 
-        #Updating table values
+        # Updating table values
         cur.execute("""
             INSERT INTO task_info 
             (title, category, importance, est_duration, due_date, energy_level, created_at, completed, score)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (title, category, importance, est_duration, due_date, energy_level, created_at, completed, score))
 
+        task_id = cur.lastrowid
+
+    return task_id
 
 #Function to delete a selected task from the table
 def delete_task(task_id):

@@ -1,5 +1,7 @@
 import streamlit as st
 from database.db import add_task
+from models.logging import log_task_creation
+from datetime import datetime
 
 st.title("Add a task!")
 
@@ -22,7 +24,7 @@ due = st.date_input("Due date")
 
 # Add button
 if st.button("Add"):
-    add_task(
+    task_id = add_task(
         title=title,
         category=category,
         importance=importance,
@@ -31,5 +33,13 @@ if st.button("Add"):
         energy_level=energy,
         completed=0,   # new tasks are incomplete
         score=0        # default score
+    )
+    log_task_creation(
+        task_id=task_id,
+        user_energy=energy,
+        timestamp=str(datetime.now()),
+        importance=importance,
+        estimated_duration=duration,
+        category=category
     )
     st.success("Task added successfully!")
