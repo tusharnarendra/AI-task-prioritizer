@@ -34,7 +34,7 @@ def init_db():
 def add_task(title, category, importance, est_duration, due_date, energy_level, completed, score):
     with sqlite3.connect("focusflow.db") as con:
         cur = con.cursor()
-        created_at = datetime.utcnow().isoformat()
+        created_at = datetime.now().isoformat()
 
         # Updating table values
         cur.execute("""
@@ -57,7 +57,7 @@ def delete_task(task_id):
 def complete_task(task_id):
     with sqlite3.connect("focusflow.db") as con:
         cur = con.cursor()
-        completed_at = datetime.utcnow().isoformat()
+        completed_at = datetime.now().isoformat()
         cur.execute('UPDATE task_info SET completed = 1, completed_at = ? WHERE id = ?', (completed_at, task_id))
 
 
@@ -84,3 +84,10 @@ def update_task_predictions(task_id, pred_duration=None, cluster_label=None, gpt
                 gpt_explanation = COALESCE(?, gpt_explanation)
             WHERE id = ?
         """, (pred_duration, cluster_label, gpt_explanation, task_id))
+        
+def highest_score():
+    with sqlite3.connect("focusflow.db") as con:
+        cur = con.cursor()
+        cur.execute("SELECT MAX(score) FROM task_info")
+        highest_score = cur.fetchone()[0] 
+    return highest_score

@@ -51,13 +51,19 @@ def log_task_completion(task_id, start_time=None, completed_time=None, actual_du
     with open(filename, mode='r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            if row["task_id"] == str(task_id):
-                row["started_time"] = start_time
-                row["completed_time"] = completed_time
-                row["actual_duration"] = actual_duration
-                row["delay_before_start"] = delay_before_start
-                row["feedback"] = user_feedback
-                row["accepted_top_suggestion"] = accepted_top_suggestion
+            if str(row["task_id"]) == str(task_id):
+                if start_time is not None:
+                    row["started_time"] = start_time
+                if completed_time is not None:
+                    row["completed_time"] = completed_time
+                if actual_duration is not None:
+                    row["actual_duration"] = actual_duration
+                if delay_before_start is not None:
+                    row["delay_before_start"] = delay_before_start
+                if user_feedback is not None:
+                    row["feedback"] = user_feedback
+                if accepted_top_suggestion is not None:
+                    row["accepted_top_suggestion"] = accepted_top_suggestion
             rows.append(row)
 
     # Write back all rows

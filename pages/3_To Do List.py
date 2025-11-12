@@ -1,5 +1,5 @@
 import streamlit as st
-from database.db import init_db, delete_task, complete_task, list_tasks
+from database.db import init_db, delete_task, complete_task, list_tasks, highest_score
 from logic.ranking import rank_tasks
 from datetime import datetime
 from models.logging import log_task_completion
@@ -72,13 +72,17 @@ else:
                 st.markdown(f"<span style='color:gray'>{secondary_text}</span>", unsafe_allow_html=True)
                 
             with col_buttons:
+                message = None  # ✅ To store messages shown after button actions
                 btn_col1, btn_col2, btn_col3, btn_col4 = st.columns([1, 1, 1, 1])
+
                 with btn_col1:
                     if not completed and st.button("✅", key=f"complete_{task_id}"):
                         complete_task(task_id)
-                        
+                        #Compare to highest score for accepted top suggestion
+                        highest_current_score = max(t['priority_score'] for t in tasks_list_sorted)
+                        accepted_top = current_task['priority_score'] == highest_current_score
                         #Calculate statistics for models and insights
-                        completed_time = datetime.utcnow().isoformat()
+                        completed_time = datetime.now().isoformat()
                         if os.path.isfile("tasks_log.csv"):
                             df = pd.read_csv("tasks_log.csv")
                             match = df.loc[df["task_id"] == task_id]
@@ -94,20 +98,22 @@ else:
                             actual_duration = None
                             delay_before_start = None
                        
-                       #log using the function in logging.py     
+                        #log using the function in logging.py     
                         log_task_completion(
                             task_id=task_id,
                             completed_time=completed_time,
                             actual_duration=actual_duration,
                             delay_before_start=delay_before_start,
                             user_feedback=None,
-                            accepted_top_suggestion=None 
+                            accepted_top_suggestion=accepted_top 
                         )
-                        st.success(f"Task {title} marked complete and logged!")                           
+                        message = f"✅ Task {title} marked complete and logged!"                           
 
                 with btn_col2:
                     if st.button("❌", key=f"delete_{task_id}"):
                         delete_task(task_id)
+                        message = f"🗑️ Task {title} deleted!"
+
                 with btn_col3:
                     if st.button("▶️", key=f"start_{task_id}"):
                         start_time = datetime.now().isoformat()
@@ -115,6 +121,8 @@ else:
                             task_id=task_id,
                             start_time=start_time
                         )
+                        message = f"▶️ Task '{title}' started!"
+
                 with btn_col4:
                     with st.popover("💬"):
                         user_feedback = st.slider("How would you rate this to do recommendation?", 1, 5, key=f"feedback_slider_{task_id}")
@@ -123,7 +131,11 @@ else:
                                 task_id=task_id,
                                 user_feedback=user_feedback
                             )
-                            st.success("Feedback recorded!")
+                            message = f"💬 Feedback recorded for {title}!"
+                
+                # ✅ Show message nicely below the buttons
+                if message:
+                    st.success(message)
                     
         st.markdown(f"**Score:** {current_task['priority_score']:.2f}")
         st.markdown(f"💡 *Why this:* {current_task['why_this']}")
