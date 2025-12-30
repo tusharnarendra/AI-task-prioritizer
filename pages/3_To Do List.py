@@ -72,7 +72,7 @@ else:
                 st.markdown(f"<span style='color:gray'>{secondary_text}</span>", unsafe_allow_html=True)
                 
             with col_buttons:
-                message = None  # ✅ To store messages shown after button actions
+                message = None  # To store messages shown after button actions
                 btn_col1, btn_col2, btn_col3, btn_col4 = st.columns([1, 1, 1, 1])
 
                 with btn_col1:
@@ -133,7 +133,7 @@ else:
                             )
                             message = f"💬 Feedback recorded for {title}!"
                 
-                # ✅ Show message nicely below the buttons
+                # Show message nicely below the buttons
                 if message:
                     st.success(message)
                     

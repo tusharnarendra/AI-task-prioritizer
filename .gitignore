@@ -1,1 +1,4 @@
 taskenv/
+.env
+tasks_log.csv
+focusflow.db
