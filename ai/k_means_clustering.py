@@ -70,9 +70,33 @@ dataset['cluster'] = y_kmeans
 cluster_summary = dataset.groupby('cluster').agg({'actual_duration': ['mean', 'median', 'std'],'est_duration': ['mean', 'median'],'importance': ['mean', 'median'],'energy_at_creation': ['mean'],'delay_before_start': ['mean'], 'time_of_day' : ['mean', 'median'],'day_of_week': lambda x: x.mode()[0], 'category': lambda x: x.mode()[0]}).reset_index()
 
 def cluster_label(summary):
-    label = ""
+    # Duration 
     duration = summary[('actual_duration', 'mean')]
     if duration < 20:
-        label += "short"
+        label = "short"
     elif duration > 60:
-        label += ""
+        label = "long"
+    else:
+        label = "medium"
+    # Time of day 
+    tod = summary[('time_of_day', 'mean')]
+    if tod < 6:
+        label += " night"
+    elif tod < 12:
+        label += " morning"
+    elif tod < 18:
+        label += " afternoon"
+    else:
+        label += " evening"
+    
+    # Category part
+    if ('category', '') in summary.columns:
+        cat_label = summary[('category', '')]
+    else:
+        # fallback if category is not multi-index
+        cat_label = summary[('category')]
+    
+    if not pd.isna(cat_label):
+        label += f" ({cat_label})"
+    
+    return label

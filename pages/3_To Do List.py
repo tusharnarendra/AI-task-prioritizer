@@ -5,6 +5,9 @@ from datetime import datetime
 from models.logging import log_task_completion
 import pandas as pd
 import os
+from ai.retrain_trigger import retrain_model
+from ai.explanations import gpt_reasoning
+from ai.ollama import ollama_reasoning
 
 init_db()
 st.title("Today's To Do List 📋")
@@ -27,7 +30,8 @@ tasks_list = [
 
 # Compute priority scores and attach to each task
 for task in tasks_list:
-    score, why_this = rank_tasks( 
+    score, why_this = rank_tasks(
+        task['category'], 
         task['importance'],
         task['est_duration'],
         task['energy_level'],
@@ -107,7 +111,13 @@ else:
                             user_feedback=None,
                             accepted_top_suggestion=accepted_top 
                         )
-                        message = f"✅ Task {title} marked complete and logged!"                           
+                        message = f"✅ Task {title} marked complete and logged!" 
+                        
+                        try:
+                            retrain_model()
+                        except Exception as e:
+                            print(f"Error retraining model: {e}")
+                                                  
 
                 with btn_col2:
                     if st.button("❌", key=f"delete_{task_id}"):
@@ -139,3 +149,55 @@ else:
                     
         st.markdown(f"**Score:** {current_task['priority_score']:.2f}")
         st.markdown(f"💡 *Why this:* {current_task['why_this']}")
+        
+        insight_key = f"gpt_insight_{task_id}"
+        err_key = f"gpt_error_{task_id}"
+
+        with st.expander("GPT insight"):
+            # Create a text area to display the response
+            insight_display = st.empty()
+
+            # Check if we already have a response for this task
+            if f"gpt_response_{task_id}" in st.session_state:
+                insight_display.write(st.session_state[f"gpt_response_{task_id}"])
+            else:
+                insight_display.caption("Click **Generate insight** to get a short suggestion.")
+            
+            if st.button("Generate insight", key=f"gpt_{task_id}"):
+                try:
+                    with st.spinner("Generating..."):
+                        if "OPENAI_API_KEY" in st.session_state:
+                            try:
+                                ai_text = openai_reasoning( 
+                                    title,
+                                    category,
+                                    est_duration,
+                                    importance,
+                                    current_task["energy_level"],
+                                    due_date
+                                )
+                            except Exception:
+                                ai_text = ollama_reasoning(
+                                    title,
+                                    category,
+                                    est_duration,
+                                    importance,
+                                    current_task["energy_level"],
+                                    due_date
+                                )
+                        else:
+                            ai_text = ollama_reasoning(
+                                title,
+                                category,
+                                est_duration,
+                                importance,
+                                current_task["energy_level"],
+                                due_date
+                            )
+                            
+                    st.session_state[f"gpt_response_{task_id}"] = ai_text
+                    st.session_state[f"gpt_error_{task_id}"] = None
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"Error generating insight: {str(e)}")
